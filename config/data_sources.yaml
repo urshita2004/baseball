@@ -1,0 +1,93 @@
+# Retrieval configuration. Changing dates creates a new sample; the manifest records what was fetched.
+statcast_sample:
+  source_id: statcast_2025_wk1_june
+  endpoint: https://baseballsavant.mlb.com/statcast_search/csv
+  # One request per day keeps every response well under Savant's ~25k-row cap.
+  start_date: 2025-06-01
+  end_date: 2025-06-07
+  raw_dir: data/raw/statcast
+  processed_path: data/processed/pitches.parquet
+  game_type: R
+  params:
+    all: "true"
+    type: details
+    player_type: pitcher
+  license_note: >
+    Statcast data (c) MLB Advanced Media. Used here for non-commercial research.
+    Review MLB terms before any product distribution.
+schedule_check:
+  # Independent game list used to reconcile coverage (empty or partial days).
+  endpoint: https://statsapi.mlb.com/api/v1/schedule
+# Full regular seasons. Dates come from the MLB seasons API (regularSeasonStartDate..EndDate) and are recorded in
+# the manifest; game_type R excludes spring training, exhibitions and postseason.
+statcast_2025:
+  source_id: statcast_2025_regular
+  role: development (train / model-selection validation / calibration)
+  endpoint: https://baseballsavant.mlb.com/statcast_search/csv
+  season: 2025
+  game_type: R
+  raw_dir: data/raw/statcast_2025
+  processed_path: data/processed/statcast_2025/pitches.parquet
+  compress: true
+  request_delay_s: 1.5
+  params: {all: "true", type: details, player_type: pitcher}
+  license_note: Statcast data (c) MLB Advanced Media. Non-commercial research use.
+statcast_2026:
+  source_id: statcast_2026_regular
+  role: development for model v2 (2026 was the one-time v1 test, scored 2026-10-11; see manifest history)
+  endpoint: https://baseballsavant.mlb.com/statcast_search/csv
+  season: 2026
+  game_type: R
+  raw_dir: data/raw/statcast_2026
+  processed_path: data/processed/statcast_2026/pitches.parquet
+  compress: true
+  request_delay_s: 1.5
+  params: {all: "true", type: details, player_type: pitcher}
+  license_note: Statcast data (c) MLB Advanced Media. Non-commercial research use.
+statcast_2027_sealed:
+  source_id: statcast_2027_regular_sealed
+  role: sealed final evaluation for model v2 - download after the 2027 regular season ends; not read by development code
+  endpoint: https://baseballsavant.mlb.com/statcast_search/csv
+  season: 2027
+  game_type: R
+  raw_dir: data/sealed/statcast_2027
+  manifest_dir: data/sealed/manifests
+  sealed: true
+  compress: true
+  request_delay_s: 1.5
+  params: {all: "true", type: details, player_type: pitcher}
+  license_note: Statcast data (c) MLB Advanced Media. Non-commercial research use.
+statcast_2026_sealed_v1_retired:
+  source_id: statcast_2026_regular_sealed
+  role: retired - v1 test snapshot (manifest kept for the v1 record; raw files now under data/raw/statcast_2026)
+  endpoint: https://baseballsavant.mlb.com/statcast_search/csv
+  season: 2026
+  game_type: R
+  raw_dir: data/sealed/statcast_2026
+  manifest_dir: data/sealed/manifests
+  sealed: true
+  compress: true
+  request_delay_s: 1.5
+  params: {all: "true", type: details, player_type: pitcher}
+  license_note: Statcast data (c) MLB Advanced Media. Non-commercial research use.
+random_seed: 20250601
+trackman_college:
+  source_id: trackman_college_pifer_v3
+  title: Optical Tracking Data from College Baseball Scrimmages
+  citation: >
+    Pifer, N. D. (2024). Optical Tracking Data from College Baseball Scrimmages (Version 3) [Data set].
+    Mendeley Data. https://doi.org/10.17632/xfnz6mkdzm.3. Described in Pifer, N. D. (2024), "Pitch-level college
+    baseball data captured by optical tracking technology", Data in Brief 57, 111049.
+  doi: 10.17632/xfnz6mkdzm.3
+  version: 3
+  license: CC BY 4.0 (attribution required; indicate changes)
+  metadata_api: https://data.mendeley.com/public-api/datasets/xfnz6mkdzm
+  file:
+    name: Track_Combo.csv
+    download_url: https://data.mendeley.com/public-files/datasets/xfnz6mkdzm/files/0d5fcc5a-1429-4a46-ad9c-33160faca6eb/file_downloaded
+    sha256: 7b7b8974107be6181dcf1880d609034ef9f7556f9fb13aec021a52d37cd0c190   # published by Mendeley
+    bytes: 2209410
+  known_limits:
+    - Exhibition (scrimmage) games, not conference play; game lengths vary.
+    - Player IDs, team IDs and game dates anonymized (consistent within the file); chronology may not be real.
+    - Pitch types are operator-tagged (TaggedPitchType), not algorithmic like Statcast.

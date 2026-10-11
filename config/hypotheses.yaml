@@ -1,0 +1,29 @@
+# Hypothesis rules (2026-10-11). Hypotheses are prompts for a coach-run experiment, never prescriptions.
+outcomes:
+  swing:   "P(ordinary swing | pitch)        - bunts excluded, takes = 0"
+  whiff:   "P(miss | ordinary swing, pitch)  - the project's primary model target"
+  swstr:   "P(swing) x P(whiff | swing) = swinging-strike probability; an INTERMEDIATE outcome, not pitch value"
+  run_value: "E[delta_pitcher_run_exp | pitch]  - runs saved per pitch (positive = good for the pitcher); captures called strikes, balls/walks, contact damage"
+swing_model:                   # v2 of the swing model (2026-10-11): v2 features + the batter's own swing tendencies
+  # As-of features: computed from the batter's strictly earlier games only, shrunk toward the train-period league rate.
+  # Chosen on August 2026 (validation); September 2026 was not used to fit or choose and is reported as a confirmation.
+  # Tried and dropped: previous-pitch context within the plate appearance (no gain on August).
+  batter_features: [bat_swing_asof, bat_zswing_asof, bat_chase_asof, bat_prior_pitches]
+  shrink_pitches: 200                     # prior weight (in pitches) pulling a batter's rate toward the league rate
+  zone_half_width_ft: 0.83                # season-invariant zone for the in-zone / chase split: |plate_x| <= this and 0 <= plate_z_abs_zone <= 1
+support:                       # a scenario is evaluated only where the pitcher has demonstrated it
+  own_pitch_percentiles: [5, 95]          # each perturbed feature must stay inside the pitcher's own range for that pitch type
+  neighbour_radius_sd: 0.5                # joint support: >= min_neighbours of his own pitches within this standardized radius
+  min_neighbours: 20
+  shape_features: [velocity_mph, spin_rpm, ivb_in, hmov_arm_in]
+min_pitches_per_type: 200
+min_pitches_per_profile: 100              # own-history comparison needs this many pitches of each profile
+sensitivity_steps: {velocity_mph: 1.0, ivb_in: 1.5, hmov_arm_in: 1.5, spin_rpm: 100}
+location_perturbations: excluded          # the model trivially favours moving the ball; not coaching insight without command evidence
+ranking:
+  # Model-only intervals cover game sampling, not model error, so a deterministic model nudge looks "significant" almost
+  # always. Model-only evidence therefore never ranks above C; higher tiers need the pitcher's own observed outcomes.
+  tier_A: "own-history: observed run-value difference (net of league change) has a 95% CI excluding 0, model estimate agrees in sign, no trade-off"
+  tier_B: "own-history or release: observed difference agrees in sign with the model estimate (CI may include 0), no trade-off"
+  tier_C: "model-only sensitivity, any trade-off between swinging strikes and run value, or observed and model disagree"
+review_after_pitches: 150                 # default review point for an experiment on one pitch type

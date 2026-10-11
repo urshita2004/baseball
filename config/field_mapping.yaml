@@ -1,0 +1,101 @@
+# Canonical data contract, version 1. status: verified = checked against the 2025 export; assumed = not yet checked.
+version: 1
+statcast:
+  identifiers:
+    game_pk:       {internal: game_pk, type: int}
+    at_bat_number: {internal: at_bat_number, type: int}
+    pitch_number:  {internal: pitch_number, type: int}
+    pitcher:       {internal: pitcher_id, type: int}
+    batter:        {internal: batter_id, type: int}
+    game_date:     {internal: game_date, type: date}
+    player_name:   {internal: pitcher_name, type: str, note: "Pitcher name in pitcher searches ('Last, First')"}
+  measurements:
+    release_speed:     {internal: velocity_mph, unit: mph, status: verified}
+    effective_speed:   {internal: perceived_velocity_mph, unit: mph, status: verified}
+    release_spin_rate: {internal: spin_rpm, unit: rpm, status: verified, note: "Plan's illustrative 'release_spin' does not exist"}
+    spin_axis:         {internal: spin_axis_deg, unit: degrees, status: verified, note: "Optional later feature; convention unverified"}
+    release_pos_x:     {internal: release_x_ft, unit: ft, status: verified, convention: "catcher's view, +x = 1B side (verified: RHP median -1.86 ft)"}
+    release_pos_z:     {internal: release_z_ft, unit: ft, status: verified, convention: "height above ground"}
+    release_extension: {internal: extension_ft, unit: ft, status: verified}
+    arm_angle:         {internal: arm_angle_deg, unit: degrees, status: verified}
+    pfx_x:             {internal: hmov_ft, unit: ft, status: verified, convention: "catcher's view, +x = 1B side; arm-side = -pfx_x for RHP, +pfx_x for LHP (equals api_break_x_arm, r=1.0)"}
+    pfx_z:             {internal: ivb_ft, unit: ft, status: verified, convention: "movement vs. spinless pitch (gravity removed)"}
+    plate_x:           {internal: plate_x_ft, unit: ft, status: verified, convention: "catcher's view, 0 = center of plate"}
+    plate_z:           {internal: plate_z_ft, unit: ft, status: verified, convention: "height above ground"}
+    sz_top:            {internal: sz_top_ft, unit: ft, status: verified}
+    sz_bot:            {internal: sz_bot_ft, unit: ft, status: verified}
+  context:
+    pitch_type: {internal: pitch_type_raw, type: category}
+    p_throws:   {internal: p_throws, allowed: [L, R]}
+    stand:      {internal: stand, allowed: [L, R]}
+    balls:      {internal: balls, allowed: [0, 1, 2, 3]}
+    strikes:    {internal: strikes, allowed: [0, 1, 2]}
+    outs_when_up: {internal: outs, allowed: [0, 1, 2]}
+    inning:     {internal: inning}
+  label_only:
+    description: {internal: description_raw, note: "Label construction only - never a predictor"}
+  # Columns that encode the outcome or the batter's swing. Never usable as predictors.
+  # miss_distance is populated only on misses (99% vs 0% on contact in the 2025-06-01 probe): a perfect label leak.
+  leakage_denylist: [description, des, type, events, bb_type, hit_location, hc_x, hc_y, hit_distance_sc,
+    launch_speed, launch_angle, launch_speed_angle, estimated_ba_using_speedangle, estimated_woba_using_speedangle,
+    estimated_slg_using_speedangle, woba_value, woba_denom, babip_value, iso_value, delta_run_exp,
+    delta_pitcher_run_exp, delta_home_win_exp, post_away_score, post_home_score, post_bat_score, post_fld_score,
+    bat_speed, swing_length, miss_distance, attack_angle, attack_direction, swing_path_tilt, hyper_speed,
+    intercept_ball_minus_batter_pos_x_inches, intercept_ball_minus_batter_pos_y_inches]
+pitch_type_groups:
+  fastball: [FF, SI, FA]
+  cutter:   [FC]
+  breaking: [SL, ST, CU, KC, SV, CS, SC]
+  offspeed: [CH, FS, FO]
+  other:    [KN, EP]
+  excluded: [PO, IN, AB, UN]   # pitchouts, intentional balls, automatic balls, unknown
+plausibility:   # Flag for review, never auto-delete
+  velocity_mph: [55, 106]
+  spin_rpm: [300, 3800]
+  extension_ft: [4.0, 8.5]
+  release_z_ft: [2.5, 8.0]
+  release_x_ft: [-5.0, 5.0]
+  hmov_ft: [-2.5, 2.5]
+  ivb_ft: [-2.5, 2.5]
+  plate_x_ft: [-4.0, 4.0]
+  plate_z_ft: [-2.0, 7.0]
+# College TrackMan V3 (Pifer, Mendeley v3). Horizontal fields are reported from the PITCHER'S view, the opposite
+# sign to Statcast. Verified 2026-10-10: RHP four-seam RelSide +1.41 / HorzBreak +7.27 (Statcast: -1.86 ft / -7.8 in);
+# hit-by-pitch PlateLocSide +1.97 for RHB, -2.66 for LHB (Statcast plate_x -2.01 / +2.28).
+trackman:
+  game_reconstruction: >
+    No game column. A new game starts when Date changes or PitchNo stops increasing, in file order. Rows dated
+    1/4/1900 (5) take the date of their block. Verified: 21 games (matches publication), PitchNo 1..n with no gaps.
+  measurements:
+    RelSpeed:         {internal: velocity_mph, unit: mph, transform: none, status: verified}
+    SpinRate:         {internal: spin_rpm, unit: rpm, transform: none, status: verified}
+    SpinAxis:         {internal: spin_axis_deg, unit: degrees, transform: none, status: assumed}
+    Extension:        {internal: extension_ft, unit: ft, transform: none, status: verified}
+    RelHeight:        {internal: release_z_ft, unit: ft, transform: none, status: verified}
+    RelSide:          {internal: release_x_ft, unit: ft, transform: "negate (pitcher's view -> catcher's view)", status: verified}
+    HorzBreak:        {internal: hmov_ft, unit: in -> ft, transform: "negate, /12", status: verified-sign,
+                       note: "Magnitude comparable to Statcast pfx_x*12; definitional equivalence not proven"}
+    InducedVertBreak: {internal: ivb_ft, unit: in -> ft, transform: "/12", status: assumed,
+                       note: "Magnitude comparable to Statcast pfx_z*12; definitional equivalence not proven"}
+    PlateLocSide:     {internal: plate_x_ft, unit: ft, transform: "negate (pitcher's view -> catcher's view)", status: verified}
+    PlateLocHeight:   {internal: plate_z_ft, unit: ft, transform: none, status: verified}
+  context:
+    TaggedPitchType: {internal: pitch_type_raw, note: "Operator tag; primary type"}
+    AutoPitchType:   {internal: pitch_type_auto, note: "TrackMan algorithm; disagrees often with the tag"}
+    PitcherThrows:   {internal: p_throws, map: {Right: R, Left: L, Undefined: null}}
+    BatterSide:      {internal: stand, map: {Right: R, Left: L, Undefined: null}}
+  not_equivalent_to_statcast:
+    pfxx: "Ratio to HorzBreak ~ -1.66; NOT Statcast pfx_x despite the name"
+    pfxz: "Ratio to InducedVertBreak ~ 1.78; NOT Statcast pfx_z despite the name"
+  missing_vs_statcast: [sz_top, sz_bot, arm_angle, game_pk]
+  zone: "No per-batter zone; fixed 1.5-3.5 ft height used for TrackMan zone rate (documented difference)"
+  leakage_denylist: [PitchCall, KorBB, TaggedHitType, AutoHitType, PlayResult, OutsOnPlay, RunsScored, ExitSpeed,
+    Angle, Direction, HitSpinRate, HitSpinAxis, PositionAt110X, PositionAt110Y, PositionAt110Z, Distance,
+    LastTrackedDistance, Bearing, HangTime, ContactPositionX, ContactPositionY, ContactPositionZ,
+    HitLaunchConfidence, HitLandingConfidence, ThrowSpeed, PopTime, ExchangeTime, TimeToBase]
+trackman_pitch_type_groups:
+  fastball: [Fastball, Sinker, Four-Seam]
+  cutter:   [Cutter]
+  breaking: [Slider, Curveball]
+  offspeed: [ChangeUp, Changeup, Splitter]
+  other:    [Knuckleball]

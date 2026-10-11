@@ -1,0 +1,40 @@
+# Feature allowlist for the pooled whiff model, version 1 (Stage 3, locked before any model is fitted).
+# Only columns listed under `allow` may enter a model pipeline. Anything else, including every new export
+# column, is excluded by default. tests/test_pipeline.py checks that this list never overlaps the leakage
+# denylist in field_mapping.yaml.
+version: 1
+target: is_miss            # 1 = miss, 0 = contact, among ordinary (non-bunt) swings
+row_filter: swing table (model population AND eligible_swing)
+allow:
+  numeric:
+    velocity_mph:     {source: release_speed}
+    spin_rpm:         {source: release_spin_rate}
+    extension_ft:     {source: release_extension}
+    release_z_ft:     {source: release_pos_z}
+    release_x_arm_ft: {source: release_pos_x, derived: "arm-side positive"}
+    hmov_arm_in:      {source: pfx_x, derived: "arm-side positive, inches"}
+    ivb_in:           {source: pfx_z, derived: "inches"}
+    arm_angle_deg:    {source: arm_angle}
+    plate_x_away_ft:  {source: plate_x, derived: "+ = away from batter (plate_x for RHB, -plate_x for LHB)"}
+    plate_z_ft:       {source: plate_z}
+    plate_z_zone:     {source: "plate_z, sz_top, sz_bot", derived: "(plate_z - sz_bot) / (sz_top - sz_bot); 0 = bottom, 1 = top"}
+    balls:            {source: balls}
+    strikes:          {source: strikes}
+  categorical:
+    pitch_type_raw:   {source: pitch_type, note: "codes with < 500 training swings pooled to their pitch_group"}
+    p_throws:         {source: p_throws}
+    stand:            {source: stand}
+  stage4_derived:     # implemented in Stage 4; computed only from tracking data available before the pitch
+    velo_diff_fb:     "velocity minus pitcher's primary-fastball velocity (prior games, else earlier in game)"
+    ivb_diff_fb:      "IVB minus primary-fastball IVB (same as-of rule)"
+    hmov_diff_fb:     "arm-side movement minus primary-fastball arm-side movement (same as-of rule)"
+    fb_ref_missing:   "indicator: no primary-fastball reference available yet"
+not_used_yet:       # allowed later only by an explicit, dated change to this file
+  spin_axis_deg: "convention not yet verified"
+  effective_speed: "derived from velocity and extension; redundant"
+  outs, inning, score, base state: "context to test in a later, separately reported experiment"
+  batter context: "Stage 6, as-of batter whiff rate (plan R2 item 7)"
+never:
+  identifiers: [pitch_key, game_pk, pitcher_id, batter_id, pitcher_name, at_bat_number, pitch_number, game_date]
+  outcome_and_swing_fields: "everything in field_mapping.yaml leakage_denylist"
+missing_values: "NaN kept and imputed inside the training pipeline with a missing indicator; never zero-filled"

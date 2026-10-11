@@ -1,0 +1,12 @@
+# Model v2 development partitions (2026-10-11). Calendar boundaries, whole official dates.
+version: 2
+seasons: [statcast_2025, statcast_2026]
+partitions:
+  train:       [2025-03-18, 2026-07-31]
+  validation:  [2026-08-01, 2026-08-31]   # model checks / ablation
+  calibration: [2026-09-01, 2026-09-27]   # calibrator candidates fitted here, judged on validation
+cross_season_check:                        # development evidence only (2026 outcomes already seen in the v1 test)
+  fit:   [2025-03-18, 2025-08-31]          # the same rows the v1 final model was fitted on
+  score: [2026-03-25, 2026-09-27]
+sealed_test: statcast_2027_sealed
+rare_pitch_type_min_train_swings: 500

@@ -1,0 +1,12 @@
+.venv/
+# Only code is committed. Data, fitted models and generated reports are produced by the pipeline (see README).
+# Pitch-level data must not be redistributed (MLB Statcast terms).
+data/
+models/
+reports/
+*.env
+.ipynb_checkpoints/
+__pycache__/
+.pytest_cache/
+graft/
+.DS_Store

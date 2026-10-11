@@ -1,0 +1,12 @@
+# Development partitions, version 1. Locked before any model is fitted (plan Stage 3, R2/R3).
+version: 1
+unit: whole official game dates in chronological order (a game, and every game on a date, sits in one partition)
+partitions:            # cumulative share of games at each boundary
+  train: 0.70
+  validation: 0.85     # model selection / tuning
+  calibration: 1.00    # probability calibration only
+sealed_test: statcast_2026_sealed   # different season; see reports/evaluation_protocol.md
+model_population:
+  exclude_no_tracking: true          # rows with no velocity, movement and location at all
+  exclude_position_players: true     # primary position not P/TWP (MLB Stats API snapshot)
+rare_pitch_type_min_train_swings: 500

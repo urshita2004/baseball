@@ -1,0 +1,21 @@
+# Statcast `description` -> swing-task label. Reviewed against the live export on 2026-10-10.
+# A value missing from this file is "unmapped" and fails validation; it is never silently guessed.
+version: 1
+statcast:
+  miss:            [swinging_strike, swinging_strike_blocked]
+  contact:         [foul, foul_tip, hit_into_play]
+  bunt:            [foul_bunt, missed_bunt, bunt_foul_tip]       # excluded from the ordinary-swing task
+  take:            [ball, blocked_ball, called_strike, hit_by_pitch]
+  non_competitive: [pitchout, automatic_ball, automatic_strike, intent_ball, foul_pitchout, swinging_pitchout]
+notes:
+  - Checked swings ruled as swings are indistinguishable from full swings in Statcast; "ordinary swing" means non-bunt swing.
+  - foul_tip is contact (the bat touched the ball) even though it is scored as a strike.
+trackman:
+  miss:            [StrikeSwinging]
+  contact:         [FoulBall, InPlay]     # InPlay rows tagged TaggedHitType == Bunt are re-labelled bunt in code
+  bunt:            []                     # foul and missed bunts cannot be identified in this file
+  take:            [BallCalled, StrikeCalled, BallinDirt, HitByPitch]
+  non_competitive: []
+trackman_notes:
+  - FoulBall cannot separate foul tips or foul bunts; missed bunts are indistinguishable from StrikeSwinging.
+  - Only bunts put in play are identifiable (TaggedHitType == Bunt) and are excluded from the swing task.

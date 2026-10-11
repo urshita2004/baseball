@@ -1,0 +1,19 @@
+# Stage 7 mapping decisions, version 1 (2026-10-11, before any college scoring).
+version: 1
+pitch_type_to_statcast:
+  auto:      {Four-Seam: FF, Sinker: SI, Cutter: FC, Slider: SL, Curveball: CU, Changeup: CH, Splitter: FS}   # model input (primary)
+  operator:  {Fastball: FF, Sinker: SI, Cutter: FC, Slider: SL, Curveball: CU, ChangeUp: CH, Splitter: FS, Knuckleball: KN}  # sensitivity
+  note: "Operator 'Fastball' cannot separate four-seam from sinker; TrackMan auto is closer to Statcast's algorithmic labels. No college equivalent of ST (sweeper)."
+feature_sets:
+  core:   # measurements verified as equivalent in sign/unit and not under a measurement question
+    numeric: [velocity_mph, spin_rpm, release_z_ft, release_x_arm_ft, hmov_arm_in, plate_x_away_ft, plate_z_ft, balls, strikes]
+  full:   # core + measurements with open definition questions (sensitivity only)
+    numeric: [velocity_mph, spin_rpm, release_z_ft, release_x_arm_ft, hmov_arm_in, plate_x_away_ft, plate_z_ft, balls, strikes,
+              ivb_in, extension_ft, velo_diff_fb, ivb_diff_fb, hmov_diff_fb, fb_ref_missing]
+  categorical: [pitch_type_level, p_throws, stand, count]
+  unavailable_in_college: {plate_z_abs_zone: "no batter heights (anonymized)", plate_z_zone: "no sz_top/sz_bot", arm_angle_deg: "not in TrackMan V3 export"}
+open_questions:
+  extension_ft: "college median ~1 ft shorter than MLB; may be a rubber-reference convention difference"
+  ivb_in: "magnitude comparable, definitional equivalence unverified"
+  fastball_differences: "college chronology unverified, so the reference is the pitcher's primary fastball in his OTHER games (tracking only), not as-of"
+college_population: "eligible ordinary swings with known pitcher and batter hand (same handedness rule as MLB)"

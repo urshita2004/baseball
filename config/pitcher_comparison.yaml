@@ -1,0 +1,15 @@
+# Pitcher-comparison display and flag heuristics (product rules, not reliability guarantees). Chosen 2026-10-11 from the
+# 2025->2026 distributions so that flags mark what is unusual rather than any rank or change.
+low_sample: {tracking_pitches: 30, outcome_swings: 50}
+peers: {min_peers: 20, velocity_band_mph: 2.0}
+peer_extreme_percentile: [2.5, 97.5]      # 5% of rows per metric by construction; v1 used 10/90 (20%) and flagged too much
+release_spread_percentile: 95
+fastball_diff_metrics_exclude_types: [FF, SI, FA]   # velo/ivb/hmov difference from own fastball is ~0 by definition
+season_change:
+  # Change relative to the league's median change for the same pitch type; thresholds near the 90th percentile of
+  # absolute pitcher change (velocity 1.76 mph, IVB 2.59 in, HB 2.25 in) and must have a 95% CI excluding 0.
+  velocity_mph: 1.75
+  ivb_in: 2.5
+  hmov_arm_in: 2.5
+  usage_points: 0.10
+whiff_vs_expected: {min_swings: 200, fdr_q: 0.10, bootstrap: 1000}
